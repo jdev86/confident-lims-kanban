@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import { nanoid } from 'nanoid';
+import { create } from 'zustand';
 
 type Ticket = { id: string; title: string };
 type Column = { id: string; title: string; tickets: Ticket[] };
@@ -26,28 +26,43 @@ export const useKanbanStore = create<KanbanStore>((set) => ({
     };
   }),
   moveTicket: (ticketId, fromColumnId, toColumnId, index) => set(state => {
-    const sourceColumn = state.columns.find(c => c.id === fromColumnId);
-    const targetColumn = state.columns.find(c => c.id === toColumnId);
-    if (!sourceColumn || !targetColumn) return state;
-  
-    const ticketIndex = sourceColumn.tickets.findIndex(t => t.id === ticketId);
-    if (ticketIndex === -1) return state;
-  
-    const [ticket] = sourceColumn.tickets.splice(ticketIndex, 1);
-  
     if (fromColumnId === toColumnId) {
-      sourceColumn.tickets.splice(index, 0, ticket);
-      return {
-        columns: state.columns.map(col =>
-          col.id === fromColumnId ? { ...col, tickets: [...sourceColumn.tickets] } : col
-        )
-      };
-    } else {
-      targetColumn.tickets.splice(index, 0, ticket);
+      console.log(`Moving FROM ticket ${ticketId} from ${fromColumnId} to ${toColumnId} at index ${index}`);
+
       return {
         columns: state.columns.map(col => {
-          if (col.id === fromColumnId) return { ...col, tickets: [...sourceColumn.tickets] };
-          if (col.id === toColumnId) return { ...col, tickets: [...targetColumn.tickets] };
+          if (col.id !== fromColumnId) return col;
+          const ticket = col.tickets.find(t => t.id === ticketId);
+          if (!ticket) return col;
+  
+          const filtered = col.tickets.filter(t => t.id !== ticketId);
+          const updated = [...filtered.slice(0, index), ticket, ...filtered.slice(index)];
+          return { ...col, tickets: updated };
+        })
+      };
+    } else {
+      console.log(`Moving ELSE ticket ${ticketId} from ${fromColumnId} to ${toColumnId} at index ${index}`);
+
+      let ticketToMove: Ticket | undefined;
+      const updatedColumns = state.columns.map(col => {
+        if (col.id === fromColumnId) {
+          const ticket = col.tickets.find(t => t.id === ticketId);
+          if (!ticket) return col;
+          ticketToMove = ticket;
+          return { ...col, tickets: col.tickets.filter(t => t.id !== ticketId) };
+        }
+        return col;
+      });
+  
+      if (!ticketToMove) return state;
+  
+      return {
+        columns: updatedColumns.map(col => {
+          if (col.id === toColumnId) {
+            const updated = [...col.tickets];
+            updated.splice(index, 0, ticketToMove!);
+            return { ...col, tickets: updated };
+          }
           return col;
         })
       };

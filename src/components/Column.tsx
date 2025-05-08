@@ -1,10 +1,10 @@
-import { useDrop } from 'react-dnd';
-import { useState } from 'react';
-import { useKanbanStore } from '@/store';
-import { Ticket } from './Ticket';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useKanbanStore } from '@/store';
+import { useState } from 'react';
+import { useDrop } from 'react-dnd';
+import { Ticket } from './Ticket';
 
 export const Column = ({ column }: { column: { id: string; title: string; tickets: any[] } }) => {
   const [newTitle, setNewTitle] = useState('');
@@ -32,7 +32,7 @@ export const Column = ({ column }: { column: { id: string; title: string; ticket
           ))}
           <form onSubmit={e => { e.preventDefault(); addTicket(column.id, newTitle); setNewTitle(''); }} className="mt-2 space-y-2">
             <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="New ticket..." />
-            <Button type="submit" size="sm">Add</Button>
+            <Button type="submit" size="sm" disabled={!newTitle}>Add</Button>
           </form>
         </CardContent>
       </Card>
